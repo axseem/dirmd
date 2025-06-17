@@ -13,23 +13,11 @@ I find that using LLMs in a browser, rather than an IDE, introduces a healthy am
 
 This approach is especially useful with web-based tools like Google AI Studio, which allows you to use state-of-the-art Gemini models for free.
 
-# Installation
+# Showcase
 
-```sh
-# Nix
-nix profile install github:axseem/dirmd
+![demo](./demo.gif)
 
-# Go
-go install github.com/axseem/dirmd@latest
-```
-
-You can also run `dirmd` directly from the GitHub repository without a permanent installation:
-
-```bash
-nix run github:axseem/dirmd
-```
-
-# Output Example 
+## Output Example 
 
 - `hello/`
   - `go.mod`
@@ -71,4 +59,20 @@ func SystemUser() string {
 	systemUser, _ := user.Current()
 	return systemUser.Name
 }
+```
+
+# Installation
+
+```sh
+# Nix
+nix profile install github:axseem/dirmd
+
+# Go
+go install github.com/axseem/dirmd@latest
+```
+
+You can also run `dirmd` directly from the GitHub repository without a permanent installation:
+
+```bash
+nix run github:axseem/dirmd
 ```
