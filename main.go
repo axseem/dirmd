@@ -41,6 +41,10 @@ well-formatted markdown file.`,
 			}
 			cfg.RootDir = rootDir
 
+			if !cmd.Flags().Changed("output") {
+				cfg.OutputPath = ""
+			}
+
 			b, err := bundler.New(cfg)
 			if err != nil {
 				return err
@@ -50,7 +54,7 @@ well-formatted markdown file.`,
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.OutputPath, "output", "o", cfg.OutputPath, "Path for the output markdown file")
+	cmd.Flags().StringVarP(&cfg.OutputPath, "output", "o", cfg.OutputPath, "Path for the output markdown file. If not specified, prints to stdout.")
 	cmd.Flags().StringVarP(&cfg.IgnoreFilePath, "ignore-file", "i", "", "Path to a custom .gitignore-style file to use for ignoring files")
 	cmd.Flags().IntVarP(&cfg.Workers, "workers", "w", cfg.Workers, "Number of concurrent workers for processing files")
 	cmd.Flags().BoolVar(&cfg.IncludeHidden, "include-hidden", cfg.IncludeHidden, "Include hidden files and directories (those starting with a dot)")

@@ -35,33 +35,40 @@ func New(cfg *config.Config) (*Bundler, error) {
 
 // Bundle finds, processes, and bundles all relevant files into a single markdown file.
 func (b *Bundler) Bundle() error {
-	fmt.Println("- Collecting files...")
+	fmt.Fprintln(os.Stderr, "- Collecting files...")
 	filePaths, err := b.collectFiles()
 	if err != nil {
 		return fmt.Errorf("error collecting files: %w", err)
 	}
 
 	if len(filePaths) == 0 {
-		fmt.Println("No files to bundle.")
+		fmt.Fprintln(os.Stderr, "No files to bundle.")
 		return nil
 	}
-	fmt.Printf("- Found %d files to bundle.\n", len(filePaths))
+	fmt.Fprintf(os.Stderr, "- Found %d files to bundle.\n", len(filePaths))
 
-	fmt.Printf("- Processing files with %d workers...\n", b.cfg.Workers)
+	fmt.Fprintf(os.Stderr, "- Processing files with %d workers...\n", b.cfg.Workers)
 	results := b.processFiles(filePaths)
 
-	fmt.Println("- Assembling markdown file...")
+	fmt.Fprintln(os.Stderr, "- Assembling markdown file...")
 	markdownContent, err := b.assembleMarkdown(filePaths, results)
 	if err != nil {
 		return fmt.Errorf("error assembling markdown: %w", err)
 	}
 
-	err = os.WriteFile(b.cfg.OutputPath, []byte(markdownContent), 0644)
+	if b.cfg.OutputPath != "" {
+		err = os.WriteFile(b.cfg.OutputPath, []byte(markdownContent), 0644)
+		if err != nil {
+			return fmt.Errorf("error writing to output file %s: %w", b.cfg.OutputPath, err)
+		}
+		fmt.Fprintf(os.Stderr, "- Successfully bundled project to %s\n", b.cfg.OutputPath)
+		return nil
+	}
+	_, err = fmt.Fprint(os.Stdout, markdownContent)
 	if err != nil {
-		return fmt.Errorf("error writing to output file %s: %w", b.cfg.OutputPath, err)
+		return fmt.Errorf("error writing to standard output: %w", err)
 	}
 
-	fmt.Printf("- Successfully bundled project to %s\n", b.cfg.OutputPath)
 	return nil
 }
 
@@ -111,7 +118,7 @@ func (b *Bundler) processFiles(paths []string) map[string]processor.Result {
 	resultsChan := make(chan processor.Result, len(paths))
 	var wg sync.WaitGroup
 
-	for i := 0; i < b.cfg.Workers; i++ {
+	for range b.cfg.Workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -183,7 +190,7 @@ func buildTreeStringRecursive(builder *strings.Builder, node *treeNode, prefix s
 		if childNode.isDir {
 			name += "/"
 		}
-		builder.WriteString(fmt.Sprintf("%s- `%s`\n", prefix, name))
+		fmt.Fprintf(builder, "%s- `%s`\n", prefix, name)
 		if len(childNode.children) > 0 {
 			buildTreeStringRecursive(builder, childNode, prefix+"  ")
 		}
@@ -207,7 +214,7 @@ func (b *Bundler) assembleMarkdown(sortedPaths []string, results map[string]proc
 			continue
 		}
 		if result.IsBinary {
-			fmt.Printf("- Skipping binary file: %s\n", path)
+			fmt.Fprintf(os.Stderr, "- Skipping binary file: %s\n", path)
 			continue
 		}
 
